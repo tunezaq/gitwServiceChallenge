@@ -7,9 +7,9 @@ Your company has gone SOA, all the way. It started off with so much promise: mic
 
 Slowly, chaos begin to creep in. These services were not quite similar enough to make sense. Service A was written in Go and UTF-8 friendly, while Service B was written in Node and ASCII only. You had n services and 2n + 1 databases. It's time to add some sanity!
 
-Your job is to bring up a simple caching service. Your service will exist solely to get, put, and delete JSON blobs from a cache. All these methods will support a clean and transparent contract to make cache interactions as simple as possible.
+Your job is to bring up a simple caching service. Your service will exist solely to get, put, and delete data into and out of a cache. All these methods will support a clean and transparent contract to make cache interactions as simple as possible.
 
-Requirements will trickle your way throughout the physical challenge, but here are a few hints to get started. Your clients will push you different types of data (all valid JSON), they'll do it concurrently at a high load, and they expect a response within 100 milliseconds.
+Requirements will trickle your way throughout the physical challenge, but here are a few hints to get started. Your clients will push you different types of data (all valid JSON), they'll do it concurrently, and they expect a response within 100 milliseconds.
 
 Endpoints
 --------------------
