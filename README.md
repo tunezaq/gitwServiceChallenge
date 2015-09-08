@@ -15,12 +15,13 @@ Endpoints
 --------------------
 Your caching service will operate at http://localhost:8088/. Please provide the following endpoints which handle the following HTTP verbs:
 */cache/.
-** POST - creates a new item in the cache. 
+** POST - creates a new item in the cache. The body of the POST should match the contract specified in the Contract section. 
 ** GET - gets the entire cache.
 ** DELETE - deletes the cache.
+
 */cache/{key}.
 ** GET - gets the cache item with matching key.
-** PUT - updates the cache item with matching key.
+** PUT - updates the cache item with matching key. The body of the PUT should match the contract specified in the Contract section.
 ** DELETE - deletes the cache item with matching key.
 
 Contract
