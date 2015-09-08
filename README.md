@@ -27,24 +27,30 @@ Your caching service will operate at http://localhost:8088/. Please provide the 
 Contract
 --------------------
 Your cache service will expect input in valid JSON and emit output in valid JSON. An existing cache item will always be described thusly:
-{
+```{
     "key": "{key}",
     "value": "{value}"
+}```
+
+An example payload:
+```{
+    "key": "problem_free_philosophy",
+    "value": "Hakuna Matata"
 }
 
 Keys and values may be any string, boolean, integer, or decimal value.
 
 Any service call that returns more than one cache item will return a "cache" key with an array of the JSON object above:
-{
+```{
     "cache": [
         {
-            "key": 1,
-            "value": "foo"
+            "key": "foo",
+            "value": 3.9999
         },
         {
             "key": "bar",
             "value": true
         }
     ]
-}
+}```
 
