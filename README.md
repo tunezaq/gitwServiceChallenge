@@ -9,7 +9,7 @@ Slowly, chaos begin to creep in. These services were not quite similar enough to
 
 Your job is to bring up a simple caching service. Your service will exist solely to get, put, and delete data into and out of a cache. All these methods will support a clean and transparent contract to make cache interactions as simple as possible.
 
-Requirements will trickle your way throughout the physical challenge, but here are a few hints to get started. Your clients will push you different types of data (all valid JSON), they'll do it concurrently, and they expect a response within 100 milliseconds.
+Requirements will trickle your way throughout the physical challenge, but here are a few hints to get started. Your clients will push you different types of data (all valid JSON), they'll do it concurrently, and they expect a fast response.
 
 Endpoints
 --------------------
