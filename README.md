@@ -26,7 +26,7 @@ Your caching service will operate at http://localhost:8088/. Please provide the 
 
 Contract
 --------------------
-Your cache service will expect input in valid JSON and emit output in valid JSON. An existing cache item will always be described thusly:
+Your cache service will expect input in valid JSON and emit output in valid JSON. A single cache item will always be described thusly:
 ```{
     "key": "{key}",
     "value": "{value}"
@@ -36,7 +36,7 @@ An example payload:
 ```{
     "key": "problem_free_philosophy",
     "value": "Hakuna Matata"
-}
+}```
 
 Keys and values may be any string, boolean, integer, or decimal value.
 
