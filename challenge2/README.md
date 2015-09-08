@@ -1,4 +1,4 @@
-Requirements Dump 2
+Requirements Dump 3
 ===
 
-Still thinking.
+A key's value should be set to nil after it's been requested in a GET call 100 times. The counter for resetting to nil should also reset to 0 at the same time.
