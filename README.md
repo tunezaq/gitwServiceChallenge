@@ -20,7 +20,7 @@ Your caching service will operate at http://localhost:8088/. Please provide the 
  * DELETE - deletes the cache.
 
 * /cache/{key}
- * GET - gets the cache item with matching key.
+ * GET - gets the fully-specified key / value pair.
  * PUT - updates the cache item with matching key. The body of the PUT should match the contract specified in the Contract section.
  * DELETE - deletes the cache item with matching key.
 
