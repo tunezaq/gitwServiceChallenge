@@ -53,6 +53,7 @@ The second portion of scoring challenge 3 is to test the same general flow as de
 Challenge 4 Scoring
 --------------------
 There's a single scoring mechanism for challenge 4 and it's pretty straightforward.
+
 | *Endpoint* | *Verb* | *Call Flow* | *Expectation* | *Point Value* |
 | ------------- | ------------- | ------------- | ------------- | ------------- |
 | multiple | multiple | A minimum of 100 calls per second, fired in batches of varying size, across all endpoints. | 95% of all service responses received within 100ms.<br/><br/>Also, no service death. | 20 |
