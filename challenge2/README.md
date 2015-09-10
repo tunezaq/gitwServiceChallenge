@@ -1,4 +1,4 @@
-Requirements Dump 3
+Requirements Dump 2
 ===
 
-A key's value should be set to nil after it's been requested in a GET call 100 times. The counter for resetting to nil should also reset to 0 at the same time.
+A cache item should be purged from the cache after it's been returned in any GET call 100 times.
