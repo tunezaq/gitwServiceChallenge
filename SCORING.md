@@ -3,7 +3,7 @@ GITW Service Challenge Scoring
 
 Scoring Criteria
 --------------------
-Each challenge is graded separately. You must satisfy the basic requirements in Challenge 1 in order to implement the subsequent challenges, but the subsequent challenges are independent of each other. Use your time wisely and fail where appropriate!
+Each challenge is graded separately. You must satisfy the basic requirements in Challenge 1 in order to implement the subsequent challenges, but the subsequent challenges are largely independent of each other. Use your time wisely and fail where appropriate!
 
 Challenge 1 Scoring
 --------------------
@@ -46,7 +46,7 @@ Why yes, there are also multiple portions for the scoring of challenge 3. The fi
 
 | *Endpoint* | *Verb* | *Call Flow* | *Expectation* | *Point Value* |
 | ------------- | ------------- | ------------- | ------------- | ------------- |
-| multiple | multiple | Populate n cache items via n POST calls.<br/><br/>Alter or delete m cache items via m PUT and DELETE calls to /cache/{key}.<br/><br/>Manually trigger a restart of the service host.<br/><br/>Single GET call to /cache/. | Status code 201 in response to POST.<br/><br/> Status code 204 returned in response to PUT and DELETE.<br/><br/>Status code 200 for GET, with the contents of the cache key matching a locally-maintained copy. | 5 |
+| multiple | multiple | Populate n cache items via n POST calls.<br/><br/>Alter or delete m cache items via m PUT and DELETE calls to /cache/{key}.<br/><br/>Manually trigger a restart of the service host.<br/><br/>Single GET call to /cache/. | Status code 201 in response to POST.<br/><br/> Status code 204 returned in response to PUT and DELETE.<br/><br/>Status code 200 for GET, with the contents of the cache matching the in-memory representation in test harness. | 5 |
 
 The second portion of scoring challenge 3 is to test the same general flow as described above, but with larger values of n and m, with more of a focus on concurrency prior to shutdown. This portion is worth 5 points.
 
@@ -56,4 +56,6 @@ There's a single scoring mechanism for challenge 4 and it's pretty straightforwa
 
 | *Endpoint* | *Verb* | *Call Flow* | *Expectation* | *Point Value* |
 | ------------- | ------------- | ------------- | ------------- | ------------- |
-| multiple | multiple | A minimum of 100 calls per second, fired in batches of varying size, across all endpoints. | 95% of all service responses received within 100ms.<br/><br/>Also, no service death. | 20 |
+| multiple | multiple | A minimum of 100 calls per second, fired in batches of varying size, across all endpoints. | 95% of all service responses received within 100ms.<br/><br/>Cache matches in-memory representation in test harness.<br/><br/>Also, no service death. | 20 |
+
+For every 5 minutes your service fulfills these requirements, you get another 20 points.
