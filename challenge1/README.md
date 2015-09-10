@@ -1,7 +1,7 @@
 Requirements Dump 1
 ===
 
-A successful POST should return status code 201 with a link to the new cache item's key. It should return 409 if a resource with that key already exists.
+A successful POST should return status code 201 with a link to the new cache item's key in the Location header. It should return 409 if a resource with that key already exists.
 
 GET, PUT, and DELETE should return 404 if passed in a cache item key that does not exist in the cache.
 
