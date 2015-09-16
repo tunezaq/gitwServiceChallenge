@@ -5,9 +5,12 @@ import (
 	`encoding/json`
 	`fmt`
 	`io/ioutil`
+	`math/rand`
 	`net/http`
+	`net/url`
 	`strconv`
 	`testing`
+	`time`
 )
 
 const (
@@ -18,6 +21,8 @@ type CachePair struct {
 	Key   interface{} `json:"key"`
 	Value interface{} `json:"value"`
 }
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 func TestChallenge1Post(t *testing.T) {
 	// Start from a clean slate.
@@ -142,6 +147,76 @@ func TestChallenge1DeleteUnhappy(t *testing.T) {
 	// Attempt to delete a non-existent key.
 	cp_unknown := &CachePair{Key: "?", Value: false}
 	deleteKeyForStatus(t, cp_unknown, http.StatusNotFound)
+}
+
+func TestChallenge1CrazyLength(t *testing.T) {
+	deleteAll(t)
+
+	// Populate a single large cache item.
+	longKey := randomString(10000)
+	longValue := randomString(10000)
+	cp1 := &CachePair{Key: longKey, Value: longValue}
+	post(t, cp1)
+
+	// Get the key we just populated.
+	getKey(t, cp1)
+}
+
+func TestChallenge1CrazyCharset(t *testing.T) {
+	deleteAll(t)
+
+	// Let's get Unicodical!
+	cp1 := &CachePair{Key: "世ƁǆΏ", Value: "界ĘĶƁΔӜӦ‡"}
+	post(t, cp1)
+
+	// Did that work?
+	getKey(t, cp1)
+}
+
+func TestChallenge1CrazyTypes(t *testing.T) {
+	deleteAll(t)
+
+	// Populate multiple cache items via post calls. Sooo similar.
+	cp1 := &CachePair{Key: "123", Value: "one twenty three"}
+	post(t, cp1)
+
+	cp2 := &CachePair{Key: 123, Value: 123}
+	post(t, cp2)
+
+	cp3 := &CachePair{Key: 123.0000001, Value: 123.0000000}
+	post(t, cp3)
+
+	cp4 := &CachePair{Key: 122.9999999999999, Value: 122.9999999999}
+	post(t, cp4)
+
+	// Get cache contents, compare to our in memory verison.
+	cpairs := []*CachePair{cp1, cp2, cp3, cp4}
+	getAll(t, cpairs)
+}
+
+func TestChallenge1CrazyJson(t *testing.T) {
+	deleteAll(t)
+
+	// We will throw some fun, JSON-y strings into the cache.
+	cp1 := &CachePair{Key: "{\"holiday\":\"thanksgiving\"}", Value: "gobble gobble!"}
+	post(t, cp1)
+
+	getAll(t, []*CachePair{cp1})
+}
+
+func TestChallenge1CrazySize(t *testing.T) {
+	deleteAll(t)
+
+	// Let's make a big cache with big strings. Does the cache hold up?
+	const biggun_size = 1000
+	var biggun_cache [biggun_size]*CachePair
+	for i := 0; i < biggun_size; i++ {
+		cp := &CachePair{Key: randomString(biggun_size), Value: randomString(biggun_size)}
+		biggun_cache[i] = cp
+		post(t, cp)
+	}
+
+	getAll(t, biggun_cache[0:biggun_size])
 }
 
 func deleteAll(t *testing.T) {
@@ -368,5 +443,14 @@ func getUrlFriendlyKey(cp *CachePair) string {
 			return "false"
 		}
 	}
-	return fmt.Sprintf("%s", cp.Key)
+	return url.QueryEscape(cp.Key.(string))
+}
+
+func randomString(n int) string {
+	rand.Seed(time.Now().UTC().UnixNano())
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }
