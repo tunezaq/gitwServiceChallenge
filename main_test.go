@@ -107,6 +107,43 @@ func TestChallenge1DeleteKey(t *testing.T) {
 	getAll(t, []*CachePair{cp2})
 }
 
+func TestChallenge1PostUnhappy(t *testing.T) {
+	// Start from a clean slate.
+	deleteAll(t)
+
+	// Populate a couple items via post.
+	cp1 := &CachePair{Key: "ayyyyyeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee!!!", Value: "look at that long key"}
+	post(t, cp1)
+	postForStatus(t, cp1, http.StatusConflict)
+}
+
+func TestChallenge1GetUnhappy(t *testing.T) {
+	// Start from a clean slate.
+	deleteAll(t)
+
+	// We should not find this key.
+	cp_rando := &CachePair{Key: "Rando", Value: "Calrissian"}
+	getKeyForStatus(t, cp_rando, http.StatusNotFound)
+}
+
+func TestChallenge1PutUnhappy(t *testing.T) {
+	// Clean slate.
+	deleteAll(t)
+
+	// Attempt to update a non-existent key.
+	cp_unknown := &CachePair{Key: "false", Value: "barf"}
+	putKeyForStatus(t, cp_unknown, http.StatusNotFound)
+}
+
+func TestChallenge1DeleteUnhappy(t *testing.T) {
+	// Clean slate.
+	deleteAll(t)
+
+	// Attempt to delete a non-existent key.
+	cp_unknown := &CachePair{Key: "?", Value: false}
+	deleteKeyForStatus(t, cp_unknown, http.StatusNotFound)
+}
+
 func deleteAll(t *testing.T) {
 	expectedStatus := http.StatusNoContent
 	req, err := http.NewRequest("DELETE", LocalHost, nil)
@@ -125,7 +162,10 @@ func deleteAll(t *testing.T) {
 }
 
 func deleteKey(t *testing.T, cp *CachePair) {
-	expectedStatus := http.StatusNoContent
+	deleteKeyForStatus(t, cp, http.StatusNoContent)
+}
+
+func deleteKeyForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
 	endpoint := fmt.Sprintf("%s%s", LocalHost, getUrlFriendlyKey(cp))
 	req, err := http.NewRequest("DELETE", endpoint, nil)
 	if err != nil {
@@ -143,7 +183,10 @@ func deleteKey(t *testing.T, cp *CachePair) {
 }
 
 func post(t *testing.T, cp *CachePair) {
-	expectedStatus := http.StatusCreated
+	postForStatus(t, cp, http.StatusCreated)
+}
+
+func postForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
 	cpJson, err := json.Marshal(cp)
 	if err != nil {
 		t.Errorf("Unable to marshal %s into json.", cp)
@@ -166,7 +209,10 @@ func post(t *testing.T, cp *CachePair) {
 }
 
 func putKey(t *testing.T, cp *CachePair) {
-	expectedStatus := http.StatusNoContent
+	putKeyForStatus(t, cp, http.StatusNoContent)
+}
+
+func putKeyForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
 	endpoint := fmt.Sprintf("%s%s", LocalHost, getUrlFriendlyKey(cp))
 	cpJson, err := json.Marshal(cp)
 
@@ -186,16 +232,26 @@ func putKey(t *testing.T, cp *CachePair) {
 }
 
 func getKey(t *testing.T, cp *CachePair) {
-	expectedStatus := http.StatusOK
+	getKeyForStatus(t, cp, http.StatusOK)
+}
+
+func getKeyForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
 	endpoint := fmt.Sprintf("%s%s", LocalHost, getUrlFriendlyKey(cp))
 	resp, err := http.Get(endpoint)
 
 	if err != nil {
 		t.Errorf("Initial connection failed: %s", err)
+		return
 	}
 
 	if resp.StatusCode != expectedStatus {
 		t.Errorf("Response code of %s doesn't match expected %s.", resp.StatusCode, expectedStatus)
+		return
+	}
+
+	// If we're testing the unhappy path, bail out before all of the cache comparison.
+	if expectedStatus != http.StatusOK {
+		return
 	}
 
 	defer resp.Body.Close()
@@ -228,10 +284,12 @@ func getAll(t *testing.T, cpairs []*CachePair) {
 
 	if err != nil {
 		t.Errorf("Initial connection failed: %s", err)
+		return
 	}
 
 	if resp.StatusCode != expectedStatus {
 		t.Errorf("Response code of %s doesn't match expected %s.", resp.StatusCode, expectedStatus)
+		return
 	}
 
 	defer resp.Body.Close()
