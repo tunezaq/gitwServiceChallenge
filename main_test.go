@@ -281,6 +281,47 @@ func TestChallenge2Crazy(t *testing.T) {
 	getAll(t, []*CachePair{})
 }
 
+func TestChallenge3(t *testing.T) {
+	deleteAll(t)
+
+	const cache_size = 1000
+	const calls_per_key = 20
+	const halt_seconds = 30
+	const sleep_millis = 10
+
+	// Create 1000 keys.
+	var cache [cache_size]*CachePair
+	for i := 0; i < cache_size; i++ {
+		cp := &CachePair{Key: randomString(cache_size), Value: randomFloat()}
+		cache[i] = cp
+		post(t, cp)
+	}
+
+	// For each key, make 20 puts with teeny tiny changes.
+	sent := make(chan bool)
+	for i := 0; i < cache_size; i++ {
+		for j := 0; j < calls_per_key; j++ {
+			cache[i].Value = cache[i].Value.(float64) + 1
+			go putKeyAsync(t, cache[i], sent)
+		}
+
+		// Sleep for 10 milliseconds, just to give the service a chance.
+		time.Sleep(time.Millisecond * sleep_millis)
+	}
+
+	// Allow all calls to finish. We're accounting for 20 puts for each key.
+	for i := 0; i < cache_size*calls_per_key; i++ {
+		<-sent
+	}
+
+	// Halt execution for 30 seconds to allow for server bounce.
+	fmt.Printf("\nChallenge 3 test case halted for %d seconds! Quick, bounce the cache service!\n", halt_seconds)
+	time.Sleep(time.Second * halt_seconds)
+
+	// Make a get call and compare in-memory vs. service cache.
+	getAll(t, cache[0:cache_size])
+}
+
 func deleteAll(t *testing.T) {
 	expectedStatus := http.StatusNoContent
 	req, err := http.NewRequest("DELETE", LocalHost, nil)
@@ -347,6 +388,11 @@ func postForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
 
 func putKey(t *testing.T, cp *CachePair) {
 	putKeyForStatus(t, cp, http.StatusNoContent)
+}
+
+func putKeyAsync(t *testing.T, cp *CachePair, sent chan<- bool) {
+	putKeyForStatus(t, cp, http.StatusNoContent)
+	sent <- true
 }
 
 func putKeyForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
@@ -525,4 +571,9 @@ func randomString(n int) string {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
+}
+
+func randomFloat() float64 {
+	rand.Seed(time.Now().UTC().UnixNano())
+	return rand.Float64()
 }
