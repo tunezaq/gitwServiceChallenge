@@ -219,6 +219,68 @@ func TestChallenge1CrazySize(t *testing.T) {
 	getAll(t, biggun_cache[0:biggun_size])
 }
 
+func TestChallenge2Synchronous(t *testing.T) {
+	deleteAll(t)
+
+	const loop_size = 100
+	cp := &CachePair{Key: randomString(loop_size), Value: randomString(loop_size)}
+	post(t, cp)
+
+	// We make 100 calls to the cache to get this key. Once we're through this loop
+	// it should be dropped from the cache as if it were hot.
+	for i := 0; i < loop_size; i++ {
+		getKey(t, cp)
+	}
+
+	// Cache is empty, yes?
+	getAll(t, []*CachePair{})
+}
+
+func TestChallenge2Asynchronous(t *testing.T) {
+	deleteAll(t)
+
+	const loop_size = 100
+	cp := &CachePair{Key: randomString(loop_size), Value: randomString(loop_size)}
+	post(t, cp)
+
+	sent := make(chan bool)
+
+	// We make 100 concurrent calls to get this key.
+	for i := 0; i < loop_size; i++ {
+		go getKeyAsync(t, cp, sent)
+	}
+
+	// Wait until all 100 workers have sent their request.
+	for i := 0; i < loop_size; i++ {
+		<-sent
+	}
+
+	getAll(t, []*CachePair{})
+}
+
+func TestChallenge2Crazy(t *testing.T) {
+	deleteAll(t)
+
+	const loop_size = 50
+	cp := &CachePair{Key: randomString(loop_size), Value: randomString(loop_size)}
+	post(t, cp)
+
+	sent := make(chan bool)
+
+	// We make 100 concurrent calls to get this key, spread across different get calls.
+	for i := 0; i < loop_size; i++ {
+		go getKeyAsync(t, cp, sent)
+		go getAllAsync(t, []*CachePair{cp}, sent)
+	}
+
+	// Wait until all 100 workers have sent their request.
+	for i := 0; i < loop_size; i++ {
+		<-sent
+	}
+
+	getAll(t, []*CachePair{})
+}
+
 func deleteAll(t *testing.T) {
 	expectedStatus := http.StatusNoContent
 	req, err := http.NewRequest("DELETE", LocalHost, nil)
@@ -310,6 +372,11 @@ func getKey(t *testing.T, cp *CachePair) {
 	getKeyForStatus(t, cp, http.StatusOK)
 }
 
+func getKeyAsync(t *testing.T, cp *CachePair, sent chan<- bool) {
+	getKeyForStatus(t, cp, http.StatusOK)
+	sent <- true
+}
+
 func getKeyForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
 	endpoint := fmt.Sprintf("%s%s", LocalHost, getUrlFriendlyKey(cp))
 	resp, err := http.Get(endpoint)
@@ -351,6 +418,11 @@ func getKeyForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
 	}
 
 	compareCaches(t, []*CachePair{cp}, []CachePair{data})
+}
+
+func getAllAsync(t *testing.T, cpairs []*CachePair, sent chan<- bool) {
+	getAll(t, cpairs)
+	sent <- true
 }
 
 func getAll(t *testing.T, cpairs []*CachePair) {
