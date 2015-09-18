@@ -301,6 +301,7 @@ func TestChallenge3(t *testing.T) {
 		cache[i] = cp
 		post(t, cp)
 	}
+    fmt.Printf("Cache keys created.\n")
 
 	// For each key, make 20 puts with teeny tiny changes.
 	sent := make(chan bool)
@@ -313,6 +314,7 @@ func TestChallenge3(t *testing.T) {
 		// Sleep for 10 milliseconds, just to give the service a chance.
 		time.Sleep(time.Millisecond * sleep_millis)
 	}
+    fmt.Printf("Cache keys updated.\n")
 
 	// Allow all calls to finish. We're accounting for 20 puts for each key.
 	for i := 0; i < cache_size*calls_per_key; i++ {
