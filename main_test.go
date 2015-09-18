@@ -19,7 +19,7 @@ import (
 
 const (
 	LocalHost = "http://localhost:8088/cache/"
-    SocketTimeoutMs = 5
+    SocketTimeoutMs = 5000
 )
 
 type CachePair struct {
