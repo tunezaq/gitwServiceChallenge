@@ -1,5 +1,9 @@
 package main
 
+// To run:
+// go build
+// ./gitwServiceChallenge
+
 import (
 	`bytes`
 	`encoding/gob` // Persistence
