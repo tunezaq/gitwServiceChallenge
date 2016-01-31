@@ -423,7 +423,7 @@ func deleteAll(t *testing.T) {
 	}
 
 	if resp.StatusCode != expectedStatus {
-		t.Errorf("Response code of %s doesn't match expected %s.", resp.StatusCode, expectedStatus)
+		t.Errorf("Response code of %d doesn't match expected %d.", resp.StatusCode, expectedStatus)
 	}
 }
 
@@ -445,7 +445,7 @@ func deleteKeyForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
 	}
 
 	if resp.StatusCode != expectedStatus {
-		t.Errorf("Response code of %s doesn't match expected %s.", resp.StatusCode, expectedStatus)
+		t.Errorf("Response code of %d doesn't match expected %d.", resp.StatusCode, expectedStatus)
 	}
 }
 
@@ -493,7 +493,7 @@ func postForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
 	}
 
 	if resp.StatusCode != expectedStatus {
-		t.Errorf("Response code of %s doesn't match expected %s.", resp.StatusCode, expectedStatus)
+		t.Errorf("Response code of %d doesn't match expected %d.", resp.StatusCode, expectedStatus)
 	}
 }
 
@@ -529,7 +529,7 @@ func putKeyForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
 	}
 
 	if resp != nil && resp.StatusCode != expectedStatus {
-		t.Errorf("Response code of %s doesn't match expected %s.", resp.StatusCode, expectedStatus)
+		t.Errorf("Response code of %d doesn't match expected %d.", resp.StatusCode, expectedStatus)
 	}
 }
 
@@ -552,7 +552,7 @@ func getKeyForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
 	}
 
 	if resp.StatusCode != expectedStatus {
-		t.Errorf("Response code of %s doesn't match expected %s.", resp.StatusCode, expectedStatus)
+		t.Errorf("Response code of %d doesn't match expected %d.", resp.StatusCode, expectedStatus)
 		return
 	}
 
@@ -607,7 +607,7 @@ func getAll(t *testing.T, cpairs []*CachePair) {
 	}
 
 	if resp.StatusCode != expectedStatus {
-		t.Errorf("Response code of %s doesn't match expected %s.", resp.StatusCode, expectedStatus)
+		t.Errorf("Response code of %d doesn't match expected %d.", resp.StatusCode, expectedStatus)
 		return
 	}
 
