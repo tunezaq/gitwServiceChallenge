@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	LocalHost = "http://localhost:8088/cache/"
-    SocketTimeoutMs = 5000
+	LocalHost       = "http://localhost:8088/cache/"
+	SocketTimeoutMs = 5000
 )
 
 type CachePair struct {
@@ -301,7 +301,7 @@ func TestChallenge3(t *testing.T) {
 		cache[i] = cp
 		post(t, cp)
 	}
-    fmt.Printf("Cache keys created.\n")
+	fmt.Printf("Cache keys created.\n")
 
 	// For each key, make 20 puts with teeny tiny changes.
 	sent := make(chan bool)
@@ -314,7 +314,7 @@ func TestChallenge3(t *testing.T) {
 		// Sleep for 10 milliseconds, just to give the service a chance.
 		time.Sleep(time.Millisecond * sleep_millis)
 	}
-    fmt.Printf("Cache keys updated.\n")
+	fmt.Printf("Cache keys updated.\n")
 
 	// Allow all calls to finish. We're accounting for 20 puts for each key.
 	for i := 0; i < cache_size*calls_per_key; i++ {
@@ -330,89 +330,97 @@ func TestChallenge3(t *testing.T) {
 }
 
 func TestChallenge4(t *testing.T) {
-    deleteAll(t)
+	deleteAll(t)
 
-    const secs_to_run = 60
-    const sla_millis = 100
-    const desired_sla_perc = .05
-	const sleep_millis = 100
-    const cache_size = 100
-    const reqs_per_sec = 100
-    const expected_reqs = (secs_to_run * reqs_per_sec)
-	
-    var cache [cache_size]*CachePair
-    cache_index := 0
-    total_reqs := 0
+	challenge4(60, 100, .05, 100, 100, 100)
+}
 
+func TestChallenge4Bonus(t *testing.T) {
+	deleteAll(t)
+
+	challenge4(600, 100, .05, 100, 100, 1000)
+}
+
+func challenge4(
+	secs_to_run int,
+	sla_millis int,
+	desired_sla_perc float64,
+	sleep_millis int,
+	cache_size int,
+	reqs_per_sec int) {
+
+	const expected_reqs = (secs_to_run * reqs_per_sec)
+	var cache [cache_size]*CachePair
+	cache_index := 0
+	total_reqs := 0
 	response := make(chan int64)
+	for true == true {
+		// Every 1000 iterations, get the cache, blow it away, start over.
+		if total_reqs > 0 && total_reqs%cache_size == 0 {
+			// Sleep briefly, just to give the cache a chance.
+			time.Sleep(time.Millisecond * sleep_millis)
+			fmt.Printf("Request block %d.\n", total_reqs)
 
-    for true == true {
-        // Every 1000 iterations, get the cache, blow it away, start over.
-        if total_reqs  > 0 && total_reqs % cache_size == 0 {
-            // Sleep briefly, just to give the cache a chance.
-            time.Sleep(time.Millisecond * sleep_millis)
-            fmt.Printf("Request block %d.\n", total_reqs)
+			// Synchronous call to getAll.
+			//go getAllAsyncForResponseTime(t, cache[0:cache_index], response)
+			getAll(t, cache[0:cache_index])
 
-            // Synchronous call to getAll.
-            //go getAllAsyncForResponseTime(t, cache[0:cache_index], response)
-            getAll(t, cache[0:cache_index])
-            
-            // Synchronous call to deleteAll.
-            //go deleteAllAsyncForResponseTime(t, response)
-            deleteAll(t)
-            
-            cache_index = 0
-            total_reqs += 2
-        }
+			// Synchronous call to deleteAll.
+			//go deleteAllAsyncForResponseTime(t, response)
+			deleteAll(t)
 
-        // Create an item in the cache, update it right away.
+			cache_index = 0
+			total_reqs += 2
+		}
+
+		// Create an item in the cache, update it right away.
 		cp := &CachePair{Key: randomString(cache_size), Value: randomString(cache_size)}
 		cache[cache_index] = cp
-        go postPutAsyncForResponseTime(t, cp, response)
-        cache_index++
-        total_reqs += 2
+		go postPutAsyncForResponseTime(t, cp, response)
+		cache_index++
+		total_reqs += 2
 
-        if total_reqs == expected_reqs {
-            break
-        }
-        
-        time.Sleep(time.Millisecond * (1000 / reqs_per_sec))
-    }
+		if total_reqs == expected_reqs {
+			break
+		}
 
-    time.Sleep(time.Millisecond * SocketTimeoutMs)
-
-    // Iterate through all of our responses. What happened?
-    sla_violations := 0
-    // hackhackhack
-    reqs_to_examine := int(float64(total_reqs) * .75)
-    for i := 0; i < reqs_to_examine; i++ {
-        fmt.Printf("Examining response %d.\n", i)
-        resp_time := <-response
-        if resp_time > sla_millis {
-            fmt.Printf("Response took %d\n", resp_time)
-            sla_violations++
-        }
+		time.Sleep(time.Millisecond * (1000 / reqs_per_sec))
 	}
 
-    fmt.Printf("Violations is %d, total reqs us %d", sla_violations, total_reqs)
-    actual_sla_perc := float64(sla_violations) / float64(total_reqs)
-    fmt.Printf("\nYou met the SLA for %.2f percent of requests.\n", (1 - actual_sla_perc) * 100)
-    if (actual_sla_perc >= desired_sla_perc) {
-        t.Errorf("Test failed! You violated the SLA %.2f of the time, where we required %.2f.", actual_sla_perc, desired_sla_perc)
-    }
+	time.Sleep(time.Millisecond * SocketTimeoutMs)
+
+	// Iterate through all of our responses. What happened?
+	sla_violations := 0
+	// hackhackhack
+	reqs_to_examine := int(float64(total_reqs) * .75)
+	for i := 0; i < reqs_to_examine; i++ {
+		fmt.Printf("Examining response %d.\n", i)
+		resp_time := <-response
+		if resp_time > sla_millis {
+			fmt.Printf("Response took %d\n", resp_time)
+			sla_violations++
+		}
+	}
+
+	fmt.Printf("Violations is %d, total reqs us %d", sla_violations, total_reqs)
+	actual_sla_perc := float64(sla_violations) / float64(total_reqs)
+	fmt.Printf("\nYou met the SLA for %.2f percent of requests.\n", (1-actual_sla_perc)*100)
+	if actual_sla_perc >= desired_sla_perc {
+		t.Errorf("Test failed! You violated the SLA %.2f of the time, where we required %.2f.", actual_sla_perc, desired_sla_perc)
+	}
 }
 
 func deleteAllAsyncForResponseTime(t *testing.T, response chan<- int64) {
-    startMillis := time.Now().UnixNano() / int64(time.Millisecond)
-    deleteAll(t)
-    endMillis := time.Now().UnixNano() / int64(time.Millisecond)
-    response <- (endMillis - startMillis)
+	startMillis := time.Now().UnixNano() / int64(time.Millisecond)
+	deleteAll(t)
+	endMillis := time.Now().UnixNano() / int64(time.Millisecond)
+	response <- (endMillis - startMillis)
 }
 
 func deleteAll(t *testing.T) {
 	expectedStatus := http.StatusNoContent
 	req, err := http.NewRequest("DELETE", LocalHost, nil)
-    req.Close = true
+	req.Close = true
 	if err != nil {
 		t.Errorf("Delete call failed: %s", err)
 	}
@@ -434,7 +442,7 @@ func deleteKey(t *testing.T, cp *CachePair) {
 func deleteKeyForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
 	endpoint := fmt.Sprintf("%s%s", LocalHost, getUrlFriendlyKey(cp))
 	req, err := http.NewRequest("DELETE", endpoint, nil)
-    req.Close = true
+	req.Close = true
 	if err != nil {
 		t.Errorf("Delete call failed: %s", err)
 	}
@@ -454,25 +462,25 @@ func post(t *testing.T, cp *CachePair) {
 }
 
 func postAsyncForResponseTime(t *testing.T, cp *CachePair, response chan<- int64) {
-    startMillis := time.Now().UnixNano() / int64(time.Millisecond)
-    post(t, cp)
-    endMillis := time.Now().UnixNano() / int64(time.Millisecond)
-    response <- (endMillis - startMillis)
+	startMillis := time.Now().UnixNano() / int64(time.Millisecond)
+	post(t, cp)
+	endMillis := time.Now().UnixNano() / int64(time.Millisecond)
+	response <- (endMillis - startMillis)
 }
 
 func postPutAsyncForResponseTime(t *testing.T, cp *CachePair, response chan<- int64) {
-    // Create a cache dealie.
-    startMillis := time.Now().UnixNano() / int64(time.Millisecond)
-    post(t, cp)
-    endMillis := time.Now().UnixNano() / int64(time.Millisecond)
-    response <- (endMillis - startMillis)
+	// Create a cache dealie.
+	startMillis := time.Now().UnixNano() / int64(time.Millisecond)
+	post(t, cp)
+	endMillis := time.Now().UnixNano() / int64(time.Millisecond)
+	response <- (endMillis - startMillis)
 
-    // Update said cache dealie.
-    cp.Value = randomString(1000)
-    startMillis = time.Now().UnixNano() / int64(time.Millisecond)
-    putKey(t, cp)
-    endMillis = time.Now().UnixNano() / int64(time.Millisecond)
-    response <- (endMillis - startMillis)
+	// Update said cache dealie.
+	cp.Value = randomString(1000)
+	startMillis = time.Now().UnixNano() / int64(time.Millisecond)
+	putKey(t, cp)
+	endMillis = time.Now().UnixNano() / int64(time.Millisecond)
+	response <- (endMillis - startMillis)
 }
 
 func postForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
@@ -507,10 +515,10 @@ func putKeyAsync(t *testing.T, cp *CachePair, sent chan<- bool) {
 }
 
 func putKeyAsyncForResponseTime(t *testing.T, cp *CachePair, response chan<- int64) {
-    startMillis := time.Now().UnixNano() / int64(time.Millisecond)
-    putKey(t, cp)
-    endMillis := time.Now().UnixNano() / int64(time.Millisecond)
-    response <- (endMillis - startMillis)
+	startMillis := time.Now().UnixNano() / int64(time.Millisecond)
+	putKey(t, cp)
+	endMillis := time.Now().UnixNano() / int64(time.Millisecond)
+	response <- (endMillis - startMillis)
 }
 
 func putKeyForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
@@ -521,7 +529,7 @@ func putKeyForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
 	if err != nil {
 		t.Errorf("Put call failed: %s", err)
 	}
-    req.Close = true
+	req.Close = true
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -586,10 +594,10 @@ func getKeyForStatus(t *testing.T, cp *CachePair, expectedStatus int) {
 }
 
 func getAllAsyncForResponseTime(t *testing.T, cpairs []*CachePair, response chan<- int64) {
-    startMillis := time.Now().UnixNano() / int64(time.Millisecond)
-    getAll(t, cpairs)
-    endMillis := time.Now().UnixNano() / int64(time.Millisecond)
-    response <- (endMillis - startMillis)
+	startMillis := time.Now().UnixNano() / int64(time.Millisecond)
+	getAll(t, cpairs)
+	endMillis := time.Now().UnixNano() / int64(time.Millisecond)
+	response <- (endMillis - startMillis)
 }
 
 func getAllAsync(t *testing.T, cpairs []*CachePair, sent chan<- bool) {
